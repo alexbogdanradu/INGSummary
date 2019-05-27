@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.168
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "INGSummary", "INGSummary\INGSummary.csproj", "{03A09871-CFBC-45DE-8292-797898B826C0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "INGSummary", "INGSummary\INGSummary.csproj", "{03A09871-CFBC-45DE-8292-797898B826C0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "INGReport", "INGReport\INGReport.csproj", "{DE2E26B8-1632-4DB4-9BA0-5F6F25C16719}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{03A09871-CFBC-45DE-8292-797898B826C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{03A09871-CFBC-45DE-8292-797898B826C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{03A09871-CFBC-45DE-8292-797898B826C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE2E26B8-1632-4DB4-9BA0-5F6F25C16719}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE2E26B8-1632-4DB4-9BA0-5F6F25C16719}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE2E26B8-1632-4DB4-9BA0-5F6F25C16719}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE2E26B8-1632-4DB4-9BA0-5F6F25C16719}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

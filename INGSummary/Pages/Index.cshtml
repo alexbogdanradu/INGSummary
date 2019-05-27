@@ -4,7 +4,61 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div style="margin: 50px">
+    <form method="post" enctype="multipart/form-data">
+        <div class="form-row" style="margin:50px">
+            <h1 class="display-4" style="margin: auto">Select a transaction report</h1>
+        </div>
+        <div class="form-control custom-file" style="margin:50px">
+            <input type="file" class="custom-file-input" id="file_field" asp-for="Upload">
+            <label class="custom-file-label" for="customFile">Choose file</label>
+        </div>
+        <div class="form-row" style="margin:50px">
+            <h3 class="display-4" style="margin: auto" id="progress">Progress:</h3>
+        </div>
+        <div>
+            <button class="form-control btn btn-light" type="submit" id="btn_upload" style="margin-top:20px">Send</button>
+        </div>
+    </form>
 </div>
+<script type="text/javascript" src="~/lib/jquery/dist/jquery.js"></script>
+<script>
+    $('#btn_upload').on('click', function (event) {
+        event.preventDefault();
+        if ($('#file_field').get(0).files.length === 0) {
+            console.log('been in else');
+            return;
+        }
+        else {
+            $.ajax({
+                // Your server script to process the upload
+                url: '/',
+                type: 'POST',
+
+                // Form data
+                data: new FormData($('form')[0]),
+
+                // Tell jQuery not to process data or worry about content-type
+                // You *must* include these options!
+                cache: false,
+                contentType: false,
+                processData: false,
+
+                // Custom XMLHttpRequest
+                xhr: function () {
+                    var myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        // For handling the progress of the upload
+                        myXhr.upload.addEventListener('progress', function (e) {
+                            if (e.lengthComputable) {
+                                console.log(Math.floor(e.loaded / e.total * 100) + '%');
+                                $('#progress').text(Math.floor(e.loaded / e.total * 100) + '%');
+                            }
+                        }, false);
+                    }
+                    return myXhr;
+                }
+            });
+        }
+    });
+</script>
