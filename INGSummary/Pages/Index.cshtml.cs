@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Newtonsoft.Json;
 using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 
@@ -15,7 +16,10 @@ namespace INGSummary.Pages
 {
     public class IndexModel : PageModel
     {
-        
+        public List<Transaction> transactions = new List<Transaction>();
+        public List<Transaction> categorizedTransactions = new List<Transaction>();
+        public List<List<Transaction>> transactionsByWeek = new List<List<Transaction>>();
+
         public void OnGet()
         {
 
@@ -25,20 +29,33 @@ namespace INGSummary.Pages
         [BindProperty]
         public IFormFile Upload { get; set; }
 
-        public List<List<Transaction>> transactionsByWeek = new List<List<Transaction>>();
-
-        public async Task OnPostAsync()
+        public JsonResult OnPost()
         {
-            var file = Path.Combine(_environment.ContentRootPath, "uploads", Upload.FileName);
-            using (var fileStream = new FileStream(file, FileMode.Create))
+            try
             {
-                await Upload.CopyToAsync(fileStream);
-                List<Transaction> transactions = getTransactionsFromFile(@"Tranzactii_12-05-2019_22-09-19_personal.xls");
+                if (!Directory.Exists("uploads"))
+                {
+                    Directory.CreateDirectory("uploads");
+                }
 
-                List<Transaction> categorizedTransactions = categorizeTransactions(transactions);
+                var file = Path.Combine("uploads", Upload.FileName);
+                using (var fileStream = new FileStream(file, FileMode.Create))
+                {
+                    Upload.CopyTo(fileStream);
+                }
 
-                List<List<Transaction>> transactionsByWeek = findWeeklyTransactions(categorizedTransactions);
+                transactions = getTransactionsFromFile(file);
+                categorizedTransactions = categorizeTransactions(transactions);
+                transactionsByWeek = findWeeklyTransactions(categorizedTransactions);
             }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return new JsonResult(JsonConvert.SerializeObject(transactionsByWeek));
+
         }
 
         private static List<Transaction> getTransactionsFromFile(string path)
