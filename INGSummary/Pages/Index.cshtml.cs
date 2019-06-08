@@ -19,6 +19,7 @@ namespace INGSummary.Pages
         public List<Transaction> transactions = new List<Transaction>();
         public List<Transaction> categorizedTransactions = new List<Transaction>();
         public List<List<Transaction>> transactionsByWeek = new List<List<Transaction>>();
+        public List<InterpretedTransaction> interpretedTransactions = new List<InterpretedTransaction>();
 
         public void OnGet()
         {
@@ -47,6 +48,7 @@ namespace INGSummary.Pages
                 transactions = getTransactionsFromFile(file);
                 categorizedTransactions = categorizeTransactions(transactions);
                 transactionsByWeek = findWeeklyTransactions(categorizedTransactions);
+                interpretedTransactions = interpretTransactionsByWeek(transactionsByWeek);
             }
             catch (Exception ex)
             {
@@ -54,8 +56,32 @@ namespace INGSummary.Pages
                 throw;
             }
 
-            return new JsonResult(JsonConvert.SerializeObject(transactionsByWeek));
+            return new JsonResult(JsonConvert.SerializeObject(interpretedTransactions));
 
+        }
+
+        private List<InterpretedTransaction> interpretTransactionsByWeek(List<List<Transaction>> transactionsByWeek)
+        {
+            List<InterpretedTransaction> response = new List<InterpretedTransaction>();
+
+            transactionsByWeek.Reverse();
+
+            for (int i = 0; i < transactionsByWeek.Count - 2; i++)
+            {
+                response.Add(new InterpretedTransaction());
+                response.Last().WeekNo = transactionsByWeek[i].First().CalendarWeek;
+                response.Last().TotalSpent = transactionsByWeek[i].Sum(o => o.Debit).ToString();
+
+                double dThisWeek = (double)transactionsByWeek[i].Sum(o => o.Debit);
+                double dLastWeek = (double)transactionsByWeek[i + 1].Sum(o => o.Debit);
+                double dDiff = dThisWeek - dLastWeek;
+                double dPercent = (double)(dDiff / dLastWeek * 100);
+
+                response.Last().TotalSpentPreviousPercent = dPercent.ToString().Substring(0, dPercent.ToString().IndexOf(".") + 2);
+                throw new Exception("meine error");
+            }
+
+            return response;
         }
 
         private static List<Transaction> getTransactionsFromFile(string path)

@@ -9,20 +9,35 @@
         <div class="form-row" style="margin:50px">
             <h1 class="display-4" style="margin: auto">Select a transaction report</h1>
         </div>
-        <div class="form-control custom-file" style="margin:50px">
+        <div class="form-control custom-file" style="margin-top:10px; margin-bottom:10px">
             <input type="file" class="custom-file-input" id="file_field" asp-for="Upload">
             <label class="custom-file-label" for="customFile">Choose file</label>
         </div>
-        <div class="progress">
-            <div class="progress-bar w-75" id="progressBar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="form-control progress" style="margin-top:10px; margin-bottom:10px; margin-left:auto; margin-right:auto">
+            <div class="progress-bar" id="progressBar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
         <div>
             <button class="form-control btn btn-light" type="submit" id="btn_upload" style="margin-top:20px">Send</button>
         </div>
+        <div class="alert-danger" id="alertError" style="display: none">
+            Error
+        </div>
     </form>
 </div>
 <div id="results" style="display: none">
-    <h1 id="resultsTitle"></h1>
+    <h1 id="resultsTitle">Weekly results</h1>
+    <table class="table" id="resultsTable">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Week</th>
+                <th scope="col">Total</th>
+                <th scope="col">Last Week</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            
+        </tbody>
+    </table>
 </div>
 <script type="text/javascript" src="~/lib/jquery/dist/jquery.js"></script>
 <script type="text/javascript" src="~/js/Index.js"></script>
