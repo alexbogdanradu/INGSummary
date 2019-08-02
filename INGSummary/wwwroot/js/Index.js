@@ -5,49 +5,40 @@
     }
     else {
         $.ajax({
-            // Your server script to process the upload
             url: '/',
             type: 'POST',
-
-            // Form data
             data: new FormData($('form')[0]),
-
-            // Tell jQuery not to process data or worry about content-type
-            // You *must* include these options!
             cache: false,
             contentType: false,
             processData: false,
 
             success: function (data) {
-                //console.log(data);
+                console.log(data);
                 $('#uploadSection').hide();
                 $('#results').show();
                 SetFields(data);
             },
             error: function (jqXHR, exception) {
-            		console.log(jqXHR);
-            		console.log(exception);
-                    var msg = '';
-                    if (jqXHR.status === 0) {
-                        msg = 'Not connect.\n Verify Network.';
-                    } else if (jqXHR.status == 404) {
-                        msg = 'Requested page not found. [404]';
-                    } else if (jqXHR.status == 500) {
-                        msg = 'Internal Server Error [500].';
-                    } else if (exception === 'parsererror') {
-                        msg = 'Requested JSON parse failed.';
-                    } else if (exception === 'timeout') {
-                        msg = 'Time out error.';
-                    } else if (exception === 'abort') {
-                        msg = 'Ajax request aborted.';
-                    } else {
-                        msg = 'Uncaught Error.\n' + jqXHR.responseText;
-                    }
-                    $('#alertError').show();
-                    $('#alertError').append(msg);
-
-                    console.log(msg);
-                },
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connect.\n Verify Network.';
+                } else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                } else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                } else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                } else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                } else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                } else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                console.log(msg);
+                $('#alertError').show();
+                $('#alertError').append(msg);
+            },
             // Custom XMLHttpRequest
             xhr: function () {
                 var myXhr = $.ajaxSettings.xhr();
@@ -57,8 +48,7 @@
                         if (e.lengthComputable) {
                             var prog = Math.floor(e.loaded / e.total * 100);
                             console.log(prog);
-                            $('#progressBar').css('width', prog+'%').attr('aria-valuenow', prog);
-                            //$('.progress-bar').css('width', valeur+'%').attr('aria-valuenow', valeur);      
+                            $('#progressBar').css('width', prog + '%').attr('aria-valuenow', prog);
                         }
                     }, false);
                 }
@@ -70,9 +60,14 @@
 
 function SetFields(data) {
     var transactions = JSON.parse(data);
-
+    console.log('been before the for');
     transactions.forEach(function (week) {
         console.log(week);
-        $("#tableBody").append('<tr><th scope="row">' + week.WeekNo + '</th><td>' + week.TotalSpent + ' RON</td><td>' + week.TotalSpentPreviousPercent + ' %</td></tr>');
+        $('#summary').append('<button type="button" class="list-group-item list-group-item-action">' + 'Week: '+ week.WeekNo + '</button>');
+        week.Payments.forEach(function (payment) {
+            console.log(payment);
+            //$('#details1').append('<button type="button" class="list-group-item list-group-item-action">' + week.TotalSpent + ' RON' + '</button>');
+            //$('#details2').append('<button type="button" class="list-group-item list-group-item-action">' + week.TotalSpent + ' RON' + '</button>');
+        });
     });
 }

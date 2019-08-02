@@ -69,6 +69,7 @@ namespace INGSummary.Pages
             for (int i = 0; i < transactionsByWeek.Count - 2; i++)
             {
                 response.Add(new InterpretedTransaction());
+
                 response.Last().WeekNo = transactionsByWeek[i].First().CalendarWeek;
                 response.Last().TotalSpent = transactionsByWeek[i].Sum(o => o.Debit).ToString();
 
@@ -78,9 +79,16 @@ namespace INGSummary.Pages
                 double dPercent = (double)(dDiff / dLastWeek * 100);
 
                 response.Last().TotalSpentPreviousPercent = dPercent.ToString().Substring(0, dPercent.ToString().IndexOf(".") + 2);
-                throw new Exception("meine error");
-            }
 
+                response.Last().Payments = new List<List<string>>();
+                foreach (var item in transactionsByWeek[i])
+                {
+                    response.Last().Payments.Add(new List<string>());
+                    response.Last().Payments.Last().Add(item.To);
+                    response.Last().Payments.Last().Add(item.SpendingType.ToString());
+                    response.Last().Payments.Last().Add(item.Debit.ToString());
+                }
+            }
             return response;
         }
 
