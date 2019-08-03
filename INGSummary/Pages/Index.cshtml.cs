@@ -20,6 +20,7 @@ namespace INGSummary.Pages
         public List<Transaction> categorizedTransactions = new List<Transaction>();
         public List<List<Transaction>> transactionsByWeek = new List<List<Transaction>>();
         public List<InterpretedTransaction> interpretedTransactions = new List<InterpretedTransaction>();
+        public List<List<Transaction>> transactionsByMonth = new List<List<Transaction>>();
 
         public void OnGet()
         {
@@ -46,18 +47,49 @@ namespace INGSummary.Pages
                 }
 
                 transactions = getTransactionsFromFile(file);
-                categorizedTransactions = categorizeTransactions(transactions);
-                transactionsByWeek = findWeeklyTransactions(categorizedTransactions);
-                interpretedTransactions = interpretTransactionsByWeek(transactionsByWeek);
+                transactionsByMonth = findMonthlyTransactions(transactions);
+                //categorizedTransactions = categorizeTransactions(transactions);
+                //transactionsByWeek = findWeeklyTransactions(categorizedTransactions);
+                //interpretedTransactions = interpretTransactionsByWeek(transactionsByWeek);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-
                 throw;
             }
 
-            return new JsonResult(JsonConvert.SerializeObject(interpretedTransactions));
+            return new JsonResult(JsonConvert.SerializeObject(transactionsByMonth));
 
+        }
+
+        private List<List<Transaction>> findMonthlyTransactions(List<Transaction> categorizedTransactions)
+        {
+            List<List<Transaction>> monthly = new List<List<Transaction>>();
+
+            IEnumerable<int> months = categorizedTransactions.Select(o => o.Date.Month).Distinct();
+            IEnumerable<int> years = categorizedTransactions.Select(o => o.Date.Year).Distinct();
+
+            foreach (var year in years)
+            {
+                foreach (var month in months)
+                {
+                    monthly.Add(new List<Transaction>());
+                    IEnumerable<int> days = categorizedTransactions.Where(o => o.Date.Year == year && o.Date.Month == month).Select(o => o.Date.Day).Distinct();
+
+                    foreach (var day in days)
+                    {
+                        monthly.Last().Add(new Transaction
+                        {
+                            Date = categorizedTransactions.Where(o => o.Date.Year == year && o.Date.Month == month && o.Date.Day == day).First().Date,
+                            Debit = categorizedTransactions.Where(o => o.Date.Year == year && o.Date.Month == month && o.Date.Day == day).Sum(o => o.Debit)
+                        });
+
+                        monthly.Last().Reverse();
+                    }
+                }
+            }
+
+            monthly.Reverse();
+            return monthly;
         }
 
         private List<InterpretedTransaction> interpretTransactionsByWeek(List<List<Transaction>> transactionsByWeek)
@@ -103,6 +135,42 @@ namespace INGSummary.Pages
             }
 
             ISheet sheet = hssfwb.GetSheet("transactions");
+
+            int iDateColumnIndex = -1;
+            int iTransactionDetailsColumnIndex = -1;
+            int iDebitColumnIndex = -1;
+            int iCreditColumnIndex = -1;
+
+            for (int col = 0; col < sheet.GetRow(1).Cells.Count - 1; col++)
+            {
+                NPOI.SS.UserModel.ICell cell = sheet.GetRow(1).GetCell(col);
+
+                if (cell.StringCellValue == "Data")
+                {
+                    iDateColumnIndex = col;
+                }
+
+                if (cell.StringCellValue == "Detalii tranzactie")
+                {
+                    iTransactionDetailsColumnIndex = col;
+                }
+
+                if (cell.StringCellValue == "Debit")
+                {
+                    iDebitColumnIndex = col;
+                }
+
+                if (cell.StringCellValue == "Credit")
+                {
+                    iCreditColumnIndex = col;
+                }
+            }
+
+            if (iDateColumnIndex == -1 || iTransactionDetailsColumnIndex == -1 || iDebitColumnIndex == -1 || iCreditColumnIndex == -1)
+            {
+                throw new Exception("Could not find one of the columns.");
+            }
+
             for (int row = 0; row <= sheet.LastRowNum; row++)
             {
                 for (int col = 0; col < sheet.GetRow(row).Cells.Count - 1; col++)
@@ -111,28 +179,28 @@ namespace INGSummary.Pages
 
                     if (cell.CellType != CellType.Blank)
                     {
-                        if (col == 15)
+                        if (col == iDebitColumnIndex)
                         {
                             if (cell.CellType == CellType.Numeric)
                             {
                                 cell.SetCellType(CellType.String);
                                 transactionList.Add(new Transaction());
-                                transactionList[transactionList.Count - 1].Date = sheet.GetRow(row).GetCell(1).DateCellValue;
-                                transactionList[transactionList.Count - 1].Debit = double.Parse(cell.StringCellValue);
-                                transactionList[transactionList.Count - 1].To = sheet.GetRow(row + 2).GetCell(7).StringCellValue;
-                                transactionList[transactionList.Count - 1].Type = sheet.GetRow(row).GetCell(7).StringCellValue;
+                                transactionList[transactionList.Count - 1].Date = sheet.GetRow(row).GetCell(iDateColumnIndex).DateCellValue;
+                                transactionList[transactionList.Count - 1].Debit = double.Parse(cell.StringCellValue, CultureInfo.InvariantCulture);
+                                transactionList[transactionList.Count - 1].To = sheet.GetRow(row + 2).GetCell(iTransactionDetailsColumnIndex).StringCellValue;
+                                transactionList[transactionList.Count - 1].Type = sheet.GetRow(row).GetCell(iTransactionDetailsColumnIndex).StringCellValue;
                             }
                         }
-                        if (col == 17)
+                        if (col == iCreditColumnIndex)
                         {
                             if (cell.CellType == CellType.Numeric)
                             {
                                 cell.SetCellType(CellType.String);
                                 transactionList.Add(new Transaction());
-                                transactionList[transactionList.Count - 1].Date = sheet.GetRow(row).GetCell(1).DateCellValue;
-                                transactionList[transactionList.Count - 1].Credit = double.Parse(cell.StringCellValue);
-                                transactionList[transactionList.Count - 1].From = sheet.GetRow(row + 1).GetCell(7).StringCellValue;
-                                transactionList[transactionList.Count - 1].Type = sheet.GetRow(row).GetCell(7).StringCellValue;
+                                transactionList[transactionList.Count - 1].Date = sheet.GetRow(row).GetCell(iDateColumnIndex).DateCellValue;
+                                transactionList[transactionList.Count - 1].Credit = double.Parse(cell.StringCellValue, CultureInfo.InvariantCulture);
+                                transactionList[transactionList.Count - 1].From = sheet.GetRow(row + 1).GetCell(iTransactionDetailsColumnIndex).StringCellValue;
+                                transactionList[transactionList.Count - 1].Type = sheet.GetRow(row).GetCell(iTransactionDetailsColumnIndex).StringCellValue;
                             }
                         }
                     }
