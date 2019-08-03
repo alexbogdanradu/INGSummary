@@ -82,9 +82,9 @@ namespace INGSummary.Pages
                             Date = categorizedTransactions.Where(o => o.Date.Year == year && o.Date.Month == month && o.Date.Day == day).First().Date,
                             Debit = categorizedTransactions.Where(o => o.Date.Year == year && o.Date.Month == month && o.Date.Day == day).Sum(o => o.Debit)
                         });
-
-                        monthly.Last().Reverse();
                     }
+
+                    monthly.Last().Reverse();
                 }
             }
 

@@ -17,11 +17,17 @@
             <canvas id="myChart" height="300"></canvas>
         </div>
 
+        <div id="yearSelection" style="margin-top: 10px">
+        </div>
+
+        <div id="monthSelection" style="margin-top: 10px">
+        </div>
+
         <div class="alert-danger" id="alertError" style="display: none">
             Error
         </div>
 
-        <div class="form-row" id="uploadButton">
+        <div class="form-row" id="uploadButton" style="margin-top: 10px">
             <label class="btn btn-dark" style="margin: 0 auto">
                 <i class="fa fa-cloud-upload" id="uploadButtonIcon" style="margin-right: 5px"></i><span id="uploadButtonText">Select report</span><input type="file" id="file_field" asp-for="Upload" hidden>
                 <div class="progress" id="progressBarContainer" style="width: inherit; display: none">
@@ -36,6 +42,16 @@
 <script type="text/javascript" src="~/lib/jquery/dist/jquery.js"></script>
 <script type="text/javascript" src="~/lib/Chart.js/Chart.js"></script>
 <script>
+    const monthNames = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun",
+        "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    var monthlyTransactions = new Array();
+    var availableYears = new Array();
+    var availableMonths = new Array();
+    var activeYear;
+    var activeMonth;
+
     var ctx = document.getElementById('myChart').getContext('2d');
 
     var myChart = new Chart(ctx, {
@@ -68,7 +84,9 @@
             maintainAspectRatio: false,
             scales: {
                 yAxes: [{
-                    type: 'category'
+                    ticks: {
+                        beginAtZero: false
+                    }
                 }]
             }
         }
@@ -93,7 +111,7 @@
                     $('#uploadButtonIcon').removeClass().addClass('fa').addClass('fa-cloud-upload');
                     $('#progressBarContainer').hide();
                     $('#results').show();
-                    SetFields(data);
+                    ProcessJSON(data);
                 },
                 error: function (jqXHR, exception) {
                     var msg = '';
@@ -133,8 +151,35 @@
         }
     });
 
-    function SetFields(data) {
-        var monthlyTransactions = new Array();
+    function SetChartData(_dateArray, _debitArray) {
+        //Delete legend
+        $.each(myChart.data.labels, function (index, value) {
+            myChart.data.labels.pop();
+        });
+
+        //Delete values
+        $.each(myChart.data.datasets[0].data, function (index, value) {
+            myChart.data.datasets[0].data.pop();
+        });
+
+        //myChart.data.datasets.forEach((dataset) => {
+        //    dataset.data.pop();
+        //});
+
+        //Fill new legend
+        $.each(_dateArray, function (index, value) {
+            myChart.data.labels.push(value);
+        });
+
+        //Fill new data
+        $.each(_debitArray, function (index, value) {
+            myChart.data.datasets[0].data.push(value);
+        });
+
+        myChart.update();
+    }
+
+    function ProcessJSON(data) {
         var transactions = JSON.parse(data);
 
         $.each(transactions, function (index, value) {
@@ -144,52 +189,59 @@
         var dateArray = new Array();
         var debitArray = new Array();
 
-        const monthNames = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun",
-            "Iul", "Aug", "Sep", "Oct", "Nov", "Dec"
-        ];
-
         $.each(monthlyTransactions[monthlyTransactions.length - 1], function (index, value) {
             var tempDate = new Date(value.Date);
             dateArray.push(tempDate.getDate() + ' ' + monthNames[tempDate.getMonth()]);
             debitArray.push(value.Debit);
         });
 
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dateArray,
-                datasets: [{
-                    label: 'Total zi',
-                    data: debitArray,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                maintainAspectRatio: false,
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: false
-                        }
-                    }]
+        //Get all available years
+        var years = Array();
+        $.each(monthlyTransactions, function (index, value) {
+            $.each(value, function (index, transaction) {
+                var tempDate = new Date(transaction.Date);
+                years.push(tempDate.getFullYear());
+            });
+        });
+        //Filter distinct tears
+        availableYears = years.filter((x, i, a) => a.indexOf(x) == i);
+
+        //Get all available months for the last year
+        var months = new Array();
+        $.each(monthlyTransactions, function (index, value) {
+            $.each(value, function (index, transaction) {
+                var tempDate = new Date(transaction.Date);
+                if (tempDate.getFullYear() === availableYears[availableYears.length - 1]) {
+                    months.push(tempDate.getMonth());
                 }
-            }
+            });
+        });
+
+        //Filter months
+        availableMonths = months.filter((x, i, a) => a.indexOf(x) == i);
+
+        //Show years buttons, delete all first
+        $('#yearSelection').empty();
+        $.each(availableYears, function (index, value) {
+            $('#yearSelection').append('<button class="btn btn-dark" type="button" style="margin-right: 10px" onclick="SetMonths(' + value + ');">' + value + '</button>');
+        });
+
+        //Show months buttons, delete all first
+        $('#monthSelection').empty();
+        $.each(availableMonths, function (index, value) {
+            $('#monthSelection').append('<button class="btn btn-dark" type="button" style="margin-right: 10px">' + monthNames[value] + '</button>');
+        });
+
+        SetChartData(dateArray, debitArray);
+    }
+
+    function SetMonths(year) {
+
+
+        //Show years buttons, delete all first
+        $('#monthSelection').empty();
+        $.each(availableMonths, function (index, value) {
+            $('#monthSelection').append('<button class="btn btn-dark" type="button" style="margin-right: 10px">' + monthNames[value] + '</button>');
         });
     }
 </script>
